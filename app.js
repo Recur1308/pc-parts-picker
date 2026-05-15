@@ -1,4 +1,11 @@
 const STORAGE_KEY = "munich-pc-parts";
+const TOKEN_KEY = "munich-pc-parts-github-token";
+const AUTO_PUBLISH_KEY = "munich-pc-parts-auto-publish";
+const GITHUB_OWNER = "Recur1308";
+const GITHUB_REPO = "pc-parts-picker";
+const GITHUB_BRANCH = "main";
+const PARTS_FILE = "data/parts.json";
+const PRICE_WORKFLOW = "update-prices.yml";
 const CURRENCY = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
 
 const sampleParts = [
@@ -51,12 +58,19 @@ const els = {
   sample: document.querySelector("#load-sample"),
   exportData: document.querySelector("#export-data"),
   importData: document.querySelector("#import-data"),
-  fileInput: document.querySelector("#file-input")
+  fileInput: document.querySelector("#file-input"),
+  token: document.querySelector("#github-token"),
+  autoPublish: document.querySelector("#auto-publish"),
+  saveToken: document.querySelector("#save-token"),
+  publishParts: document.querySelector("#publish-parts"),
+  syncState: document.querySelector("#sync-state"),
+  syncMessage: document.querySelector("#sync-message")
 };
 
 init();
 
 async function init() {
+  restoreSyncSettings();
   bindEvents();
   await loadSharedParts();
   await loadPriceCache();
@@ -76,6 +90,7 @@ function bindEvents() {
     saveParts();
     resetForm();
     render();
+    maybeAutoPublish();
   });
 
   els.reset.addEventListener("click", resetForm);
@@ -85,11 +100,17 @@ function bindEvents() {
     parts = [...parts, ...sampleParts.map((part) => ({ ...part, id: crypto.randomUUID() }))];
     saveParts();
     render();
+    maybeAutoPublish();
   });
 
   els.exportData.addEventListener("click", exportParts);
   els.importData.addEventListener("click", () => els.fileInput.click());
   els.fileInput.addEventListener("change", importParts);
+  els.saveToken.addEventListener("click", saveToken);
+  els.publishParts.addEventListener("click", publishParts);
+  els.autoPublish.addEventListener("change", () => {
+    localStorage.setItem(AUTO_PUBLISH_KEY, els.autoPublish.checked ? "1" : "0");
+  });
 }
 
 async function loadPriceCache() {
@@ -115,7 +136,7 @@ async function loadSharedParts() {
     sharedParts = Array.isArray(payload.parts) ? payload.parts : [];
     if (!parts.length && sharedParts.length) {
       parts = sharedParts.map(normalizePart);
-      saveParts();
+      saveParts(false);
     }
   } catch {
     sharedParts = [];
@@ -131,8 +152,9 @@ function loadParts() {
   }
 }
 
-function saveParts() {
+function saveParts(markDirty = true) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(parts));
+  if (markDirty) setSyncMessage("Unsynced local changes", "Local");
 }
 
 function normalizePart(part) {
@@ -145,6 +167,13 @@ function normalizePart(part) {
     urls: Array.isArray(part.urls) ? part.urls : [],
     notes: part.notes || ""
   };
+}
+
+function restoreSyncSettings() {
+  const token = localStorage.getItem(TOKEN_KEY) || "";
+  els.token.value = token;
+  els.autoPublish.checked = localStorage.getItem(AUTO_PUBLISH_KEY) === "1";
+  setSyncMessage(token ? "Token saved in this browser." : "Website edits stay local until published.", token ? "Ready" : "Local");
 }
 
 function readForm() {
@@ -259,6 +288,7 @@ function bindCardEvents() {
       parts = parts.filter((part) => part.id !== id);
       saveParts();
       render();
+      maybeAutoPublish();
     });
   });
 }
@@ -329,9 +359,107 @@ async function importParts(event) {
     parts = incoming.map(normalizePart);
     saveParts();
     render();
+    maybeAutoPublish();
   } finally {
     event.target.value = "";
   }
+}
+
+function saveToken() {
+  const token = els.token.value.trim();
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    setSyncMessage("Token saved. Publishing can update GitHub now.", "Ready");
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+    setSyncMessage("Token removed. Edits are local only.", "Local");
+  }
+}
+
+async function maybeAutoPublish() {
+  if (!els.autoPublish.checked || !getToken()) return;
+  await publishParts();
+}
+
+async function publishParts() {
+  const token = getToken();
+  if (!token) {
+    setSyncMessage("Add and save a GitHub token first.", "Local");
+    return;
+  }
+
+  setPublishing(true, "Publishing parts to GitHub...");
+  try {
+    const remote = await githubRequest(`contents/${PARTS_FILE}?ref=${GITHUB_BRANCH}`, { token });
+    const body = JSON.stringify({ parts: parts.map(normalizePart) }, null, 2) + "\n";
+    await githubRequest(`contents/${PARTS_FILE}`, {
+      token,
+      method: "PUT",
+      body: {
+        message: "Update parts from website",
+        content: toBase64(body),
+        sha: remote.sha,
+        branch: GITHUB_BRANCH
+      }
+    });
+
+    setSyncMessage("Parts published. Starting price update...", "Syncing");
+    await githubRequest(`actions/workflows/${PRICE_WORKFLOW}/dispatches`, {
+      token,
+      method: "POST",
+      body: { ref: GITHUB_BRANCH },
+      expectNoContent: true
+    });
+    setSyncMessage("Published. Price update workflow started.", "Synced");
+  } catch (error) {
+    setSyncMessage(error.message || "Publish failed.", "Error");
+  } finally {
+    setPublishing(false);
+  }
+}
+
+async function githubRequest(path, options) {
+  const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/${path}`, {
+    method: options.method || "GET",
+    headers: {
+      "accept": "application/vnd.github+json",
+      "authorization": `Bearer ${options.token}`,
+      "content-type": "application/json",
+      "x-github-api-version": "2022-11-28"
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  if (options.expectNoContent && response.status === 204) return null;
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.message || `GitHub request failed with HTTP ${response.status}`);
+  }
+  return payload;
+}
+
+function getToken() {
+  return els.token.value.trim() || localStorage.getItem(TOKEN_KEY) || "";
+}
+
+function setPublishing(isPublishing, message) {
+  els.publishParts.disabled = isPublishing;
+  els.saveToken.disabled = isPublishing;
+  if (message) setSyncMessage(message, "Syncing");
+}
+
+function setSyncMessage(message, state) {
+  els.syncMessage.textContent = message;
+  els.syncState.textContent = state;
+}
+
+function toBase64(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
 }
 
 function isEbay(value) {

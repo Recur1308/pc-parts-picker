@@ -74,6 +74,26 @@
             <button type="button" id="reset-form" class="secondary-button">Clear</button>
           </div>
         </form>
+
+        <section class="sync-panel" aria-labelledby="sync-title">
+          <div class="panel-heading">
+            <h2 id="sync-title">GitHub Sync</h2>
+            <span id="sync-state" class="status-pill">Local</span>
+          </div>
+          <label>
+            GitHub token
+            <input id="github-token" type="password" autocomplete="off" placeholder="Fine-grained token" />
+          </label>
+          <label class="check-row">
+            <input id="auto-publish" type="checkbox" />
+            Auto-publish saves
+          </label>
+          <div class="form-actions">
+            <button type="button" id="save-token" class="secondary-button">Save Token</button>
+            <button type="button" id="publish-parts" class="primary-button">Publish</button>
+          </div>
+          <p id="sync-message" class="sync-message">Website edits stay local until published.</p>
+        </section>
       </section>
 
       <section class="parts-area" aria-labelledby="parts-title">

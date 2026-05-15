@@ -33,7 +33,21 @@ Edit `data/parts.json`:
 }
 ```
 
-Parts added in the web app are saved in your browser first. Export them from the header and replace `data/parts.json` with that JSON when you want GitHub Actions to refresh prices for everyone.
+Parts added in the web app are saved in your browser first. Use **GitHub Sync > Publish** to commit the current parts list to `data/parts.json` and start the price update workflow.
+
+## GitHub Sync token
+
+Publishing from GitHub Pages needs a GitHub token because the static website cannot write to the repository by itself.
+
+Create a fine-grained personal access token for only this repository:
+
+- Repository access: `Recur1308/pc-parts-picker`
+- Contents: Read and write
+- Actions: Read and write
+
+Paste the token into **GitHub Sync** on the site and click **Save Token**. The token is stored only in your browser local storage. If **Auto-publish saves** is enabled, saving or deleting a part commits `data/parts.json` and triggers `update-prices.yml`.
+
+Direct Idealo product URLs still work best. GitHub-hosted runners may be blocked by Idealo, so the updater preserves the last good cached prices instead of erasing them when a fetch is blocked.
 
 ## Publish on GitHub Pages
 

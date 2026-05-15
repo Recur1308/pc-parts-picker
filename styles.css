@@ -171,6 +171,14 @@ h2 {
   gap: 0.9rem;
 }
 
+.sync-panel {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
 label {
   display: grid;
   gap: 0.35rem;
@@ -193,6 +201,23 @@ textarea {
 
 textarea {
   resize: vertical;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.check-row input {
+  width: 1rem;
+  min-height: 1rem;
+}
+
+.sync-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .toolbar p {
