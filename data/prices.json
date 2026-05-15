@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-15T19:01:08.159Z",
+  "updatedAt": "2026-05-15T19:01:34.560Z",
   "parts": {
     "cpu-ryzen-5-9600x": {
       "name": "AMD Ryzen 5 9600X 3.9 GHz 6-Core Processor",
@@ -69,6 +69,14 @@
           "fetchedAt": "2026-05-15T18:58:01.178Z"
         }
       ]
+    },
+    "5d38598a-fe06-4133-a06b-7e36d3997a63": {
+      "name": "G.Skill Flare X5 32 GB (2 x 16 GB) DDR5-6000 CL36 Memory",
+      "offers": []
+    },
+    "ee16b38a-903f-4da6-89c1-b5aa7637c44c": {
+      "name": "GeForce RTX 5070 12 GB Video Card",
+      "offers": []
     }
   }
 }
