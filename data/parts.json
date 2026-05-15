@@ -1,3 +1,13 @@
 {
-  "parts": []
+  "parts": [
+    {
+      "id": "cpu-ryzen-5-9600x",
+      "category": "CPU",
+      "name": "AMD Ryzen 5 9600X 3.9 GHz 6-Core Processor",
+      "query": "AMD Ryzen 5 9600X boxed",
+      "priorityUrl": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
+      "urls": [],
+      "notes": ""
+    }
+  ]
 }

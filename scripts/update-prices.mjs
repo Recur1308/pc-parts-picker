@@ -4,7 +4,7 @@ import path from "node:path";
 const root = process.cwd();
 const partsPath = path.join(root, "data", "parts.json");
 const pricesPath = path.join(root, "data", "prices.json");
-const blockedDomains = ["ebay."];
+const blockedDomains = ["ebay.", "ebay"];
 
 const payload = JSON.parse(await fs.readFile(partsPath, "utf8"));
 const parts = Array.isArray(payload.parts) ? payload.parts : [];
@@ -19,8 +19,8 @@ for (const part of parts) {
 
   for (const url of urls) {
     if (isBlocked(url)) continue;
-    const offer = await fetchOffer(url);
-    if (offer) offers.push(offer);
+    const fetchedOffers = await fetchOffers(url);
+    offers.push(...fetchedOffers);
   }
 
   output.parts[part.id || part.name] = {
@@ -33,67 +33,77 @@ await fs.writeFile(pricesPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
 console.log(`Updated prices for ${parts.length} parts.`);
 
 function candidateUrls(part) {
-  const query = part.query || part.name;
   const urls = [
     part.priorityUrl,
-    ...(Array.isArray(part.urls) ? part.urls : []),
-    idealoSearchUrl(query),
-    geizhalsSearchUrl(query),
-    alternateSearchUrl(query),
-    amazonSearchUrl(query)
+    ...(Array.isArray(part.urls) ? part.urls : [])
   ];
   return urls.filter(Boolean);
 }
 
-function idealoSearchUrl(query) {
-  return `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${encodeURIComponent(query)}`;
-}
-
-function geizhalsSearchUrl(query) {
-  return `https://geizhals.de/?fs=${encodeURIComponent(query)}&hloc=de`;
-}
-
-function alternateSearchUrl(query) {
-  return `https://www.alternate.de/listing.xhtml?q=${encodeURIComponent(query)}`;
-}
-
-function amazonSearchUrl(query) {
-  return `https://www.amazon.de/s?k=${encodeURIComponent(query)}`;
-}
-
-async function fetchOffer(url) {
+async function fetchOffers(url) {
   try {
     const response = await fetch(url, {
       headers: {
         "accept": "text/html,application/xhtml+xml",
         "accept-language": "de-DE,de;q=0.9,en;q=0.8",
-        "user-agent": "Mozilla/5.0 (compatible; MunichPartsPicker/1.0; +https://github.com/)"
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
       },
       redirect: "follow"
     });
 
     if (!response.ok) {
       console.warn(`Skipped ${url}: HTTP ${response.status}`);
-      return null;
+      return [];
     }
 
     const html = await response.text();
+    if (isIdealoProductPage(response.url || url)) {
+      const idealoOffers = extractIdealoOffers(html, response.url || url);
+      if (idealoOffers.length) return idealoOffers;
+    }
+
     const price = extractPrice(html);
     if (!price) {
       console.warn(`No price found for ${url}`);
-      return null;
+      return [];
     }
 
-    return {
+    return [{
       price,
       source: sourceName(url, html),
       url: response.url || url,
       fetchedAt: new Date().toISOString()
-    };
+    }];
   } catch (error) {
     console.warn(`Skipped ${url}: ${error.message}`);
-    return null;
+    return [];
   }
+}
+
+function isIdealoProductPage(url) {
+  return /idealo\.de\/preisvergleich\/OffersOfProduct\//i.test(url);
+}
+
+function extractIdealoOffers(html, url) {
+  return [...html.matchAll(/data-mtrx-click='([^']+)'/gi)]
+    .map((match) => htmlDecode(match[1]))
+    .map((raw) => {
+      try {
+        const payload = JSON.parse(raw);
+        const price = payload.products?.[0]?.price;
+        const source = payload.shop_name || "idealo.de";
+        if (!Number.isFinite(Number(price)) || isBlocked(source)) return null;
+        return {
+          price: Number(price),
+          source,
+          url,
+          fetchedAt: new Date().toISOString()
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
 }
 
 function extractPrice(html) {
@@ -160,6 +170,14 @@ function parseEuro(value) {
   return Number.isFinite(price) ? price : null;
 }
 
+function htmlDecode(value) {
+  return String(value)
+    .replace(/&#034;/g, '"')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&#039;/g, "'");
+}
+
 function sourceName(url, html) {
   const ogSite = firstMatch(html, [/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i]);
   return ogSite || new URL(url).hostname.replace(/^www\./, "");
@@ -168,6 +186,7 @@ function sourceName(url, html) {
 function dedupeOffers(offers) {
   const seen = new Set();
   return offers.filter((offer) => {
+    if (isBlocked(offer.source) || isBlocked(offer.url)) return false;
     const key = `${offer.source}:${offer.price}`;
     if (seen.has(key)) return false;
     seen.add(key);

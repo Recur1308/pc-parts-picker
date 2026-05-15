@@ -30,6 +30,7 @@ const sampleParts = [
 
 let parts = loadParts();
 let prices = {};
+let sharedParts = [];
 
 const els = {
   form: document.querySelector("#part-form"),
@@ -57,6 +58,7 @@ init();
 
 async function init() {
   bindEvents();
+  await loadSharedParts();
   await loadPriceCache();
   render();
 }
@@ -105,6 +107,21 @@ async function loadPriceCache() {
   }
 }
 
+async function loadSharedParts() {
+  try {
+    const response = await fetch("./data/parts.json", { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json();
+    sharedParts = Array.isArray(payload.parts) ? payload.parts : [];
+    if (!parts.length && sharedParts.length) {
+      parts = sharedParts.map(normalizePart);
+      saveParts();
+    }
+  } catch {
+    sharedParts = [];
+  }
+}
+
 function loadParts() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -118,6 +135,18 @@ function saveParts() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(parts));
 }
 
+function normalizePart(part) {
+  return {
+    id: part.id || crypto.randomUUID(),
+    category: part.category || "Other",
+    name: part.name || "Unnamed part",
+    query: part.query || part.name || "Unnamed part",
+    priorityUrl: part.priorityUrl || "",
+    urls: Array.isArray(part.urls) ? part.urls : [],
+    notes: part.notes || ""
+  };
+}
+
 function readForm() {
   const name = els.name.value.trim();
   return {
@@ -126,6 +155,7 @@ function readForm() {
     name,
     query: els.query.value.trim() || name,
     priorityUrl: els.priorityUrl.value.trim(),
+    urls: [],
     notes: els.notes.value.trim()
   };
 }
@@ -250,7 +280,8 @@ function renderSummary(visible) {
 function getPriceResult(part) {
   const byId = prices[part.id];
   const byName = prices[part.name];
-  const offers = normalizeOffers(byId?.offers || byName?.offers || []);
+  const byMatchingName = Object.values(prices).find((entry) => entry?.name === part.name);
+  const offers = normalizeOffers(byId?.offers || byName?.offers || byMatchingName?.offers || []);
   return {
     best: offers[0],
     second: offers[1]
@@ -279,11 +310,12 @@ function getSearchLinks(part) {
 }
 
 function exportParts() {
-  const blob = new Blob([JSON.stringify({ parts }, null, 2)], { type: "application/json" });
+  const exportable = parts.map(normalizePart);
+  const blob = new Blob([JSON.stringify({ parts: exportable }, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "pc-parts.json";
+  link.download = "parts.json";
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -294,14 +326,7 @@ async function importParts(event) {
   try {
     const payload = JSON.parse(await file.text());
     const incoming = Array.isArray(payload.parts) ? payload.parts : [];
-    parts = incoming.map((part) => ({
-      id: part.id || crypto.randomUUID(),
-      category: part.category || "Other",
-      name: part.name || "Unnamed part",
-      query: part.query || part.name || "Unnamed part",
-      priorityUrl: part.priorityUrl || "",
-      notes: part.notes || ""
-    }));
+    parts = incoming.map(normalizePart);
     saveParts();
     render();
   } finally {
@@ -310,7 +335,7 @@ async function importParts(event) {
 }
 
 function isEbay(value) {
-  return String(value).toLowerCase().includes("ebay.");
+  return String(value).toLowerCase().includes("ebay");
 }
 
 function hostname(url) {
