@@ -111,7 +111,7 @@ function extractIdealoOffers(html, url) {
       try {
         const payload = JSON.parse(raw);
         const price = payload.products?.[0]?.price;
-        const source = payload.shop_name || "idealo.de";
+        const source = cleanText(payload.shop_name || "idealo.de");
         if (!Number.isFinite(Number(price)) || isBlocked(source)) return null;
         return {
           price: Number(price),
@@ -198,9 +198,15 @@ function htmlDecode(value) {
     .replace(/&#039;/g, "'");
 }
 
+function cleanText(value) {
+  const text = String(value);
+  if (!/[ÃÂ]/.test(text)) return text;
+  return Buffer.from(text, "latin1").toString("utf8");
+}
+
 function sourceName(url, html) {
   const ogSite = firstMatch(html, [/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i]);
-  return ogSite || new URL(url).hostname.replace(/^www\./, "");
+  return cleanText(ogSite || new URL(url).hostname.replace(/^www\./, ""));
 }
 
 function dedupeOffers(offers) {
