@@ -26,6 +26,24 @@
       "priorityUrl": "https://www.idealo.de/preisvergleich/OffersOfProduct/205567784_-b850-aorus-elite-wifi7-gigabyte.html",
       "urls": [],
       "notes": ""
+    },
+    {
+      "id": "5d38598a-fe06-4133-a06b-7e36d3997a63",
+      "category": "Memory",
+      "name": "G.Skill Flare X5 32 GB (2 x 16 GB) DDR5-6000 CL36 Memory",
+      "query": "G.Skill Flare X5 32 GB (2 x 16 GB) DDR5-6000 CL36 Memory",
+      "priorityUrl": "",
+      "urls": [],
+      "notes": ""
+    },
+    {
+      "id": "ee16b38a-903f-4da6-89c1-b5aa7637c44c",
+      "category": "Video Card",
+      "name": "GeForce RTX 5070 12 GB Video Card",
+      "query": "GeForce RTX 5070 12 GB Video Card",
+      "priorityUrl": "",
+      "urls": [],
+      "notes": ""
     }
   ]
 }
