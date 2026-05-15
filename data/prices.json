@@ -1,9 +1,34 @@
 {
-  "updatedAt": "2026-05-15T18:23:08.687Z",
+  "updatedAt": "2026-05-15T18:23:53.810Z",
   "parts": {
     "cpu-ryzen-5-9600x": {
       "name": "AMD Ryzen 5 9600X 3.9 GHz 6-Core Processor",
-      "offers": []
+      "offers": [
+        {
+          "price": 164.87,
+          "source": "notebooksbilliger.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
+          "fetchedAt": "2026-05-15T18:23:54.101Z"
+        },
+        {
+          "price": 164.87,
+          "source": "nullprozentshop.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
+          "fetchedAt": "2026-05-15T18:23:54.101Z"
+        },
+        {
+          "price": 168.98,
+          "source": "mindfactory.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
+          "fetchedAt": "2026-05-15T18:23:54.101Z"
+        },
+        {
+          "price": 168.99,
+          "source": "x-kom.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
+          "fetchedAt": "2026-05-15T18:23:54.101Z"
+        }
+      ]
     }
   }
 }

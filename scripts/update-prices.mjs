@@ -7,6 +7,7 @@ const pricesPath = path.join(root, "data", "prices.json");
 const blockedDomains = ["ebay.", "ebay"];
 
 const payload = JSON.parse(await fs.readFile(partsPath, "utf8"));
+const existingPrices = await readExistingPrices();
 const parts = Array.isArray(payload.parts) ? payload.parts : [];
 const output = {
   updatedAt: new Date().toISOString(),
@@ -25,12 +26,31 @@ for (const part of parts) {
 
   output.parts[part.id || part.name] = {
     name: part.name,
-    offers: dedupeOffers(offers).sort((a, b) => a.price - b.price).slice(0, 4)
+    offers: bestOffers(part, offers)
   };
 }
 
 await fs.writeFile(pricesPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
 console.log(`Updated prices for ${parts.length} parts.`);
+
+async function readExistingPrices() {
+  try {
+    return JSON.parse(await fs.readFile(pricesPath, "utf8"));
+  } catch {
+    return { parts: {} };
+  }
+}
+
+function bestOffers(part, offers) {
+  const currentOffers = dedupeOffers(offers).sort((a, b) => a.price - b.price).slice(0, 4);
+  if (currentOffers.length) return currentOffers;
+
+  const existing = existingPrices.parts?.[part.id || part.name]?.offers || existingPrices.parts?.[part.name]?.offers || [];
+  if (existing.length) {
+    console.warn(`Keeping previous prices for ${part.name}; no current offers fetched.`);
+  }
+  return existing;
+}
 
 function candidateUrls(part) {
   const urls = [
