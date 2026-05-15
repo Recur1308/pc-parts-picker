@@ -47,6 +47,8 @@ Create a fine-grained personal access token for only this repository:
 
 Paste the token into **GitHub Sync** on the site and click **Save Token**. The token is stored only in your browser local storage. If **Auto-publish saves** is enabled, saving or deleting a part commits `data/parts.json` and triggers `update-prices.yml`.
 
+Publishing merges your browser parts with the current GitHub `data/parts.json` by product name, so an incomplete browser list does not wipe existing repo parts. After the workflow starts, the page checks GitHub's file API for fresh `data/prices.json` data so new cached prices can appear before GitHub Pages finishes deploying.
+
 Direct Idealo product URLs still work best. GitHub-hosted runners may be blocked by Idealo, so the updater preserves the last good cached prices instead of erasing them when a fetch is blocked.
 
 ## Publish on GitHub Pages

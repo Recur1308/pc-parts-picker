@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-15T18:56:01.826Z",
+  "updatedAt": "2026-05-15T18:58:00.414Z",
   "parts": {
     "cpu-ryzen-5-9600x": {
       "name": "AMD Ryzen 5 9600X 3.9 GHz 6-Core Processor",
@@ -8,35 +8,67 @@
           "price": 164.87,
           "source": "notebooksbilliger.de",
           "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
-          "fetchedAt": "2026-05-15T18:31:24.801Z"
+          "fetchedAt": "2026-05-15T18:58:00.716Z"
         },
         {
           "price": 164.87,
           "source": "nullprozentshop.de",
           "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
-          "fetchedAt": "2026-05-15T18:31:24.801Z"
+          "fetchedAt": "2026-05-15T18:58:00.716Z"
         },
         {
           "price": 168.98,
           "source": "mindfactory.de",
           "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
-          "fetchedAt": "2026-05-15T18:31:24.801Z"
+          "fetchedAt": "2026-05-15T18:58:00.716Z"
         },
         {
           "price": 168.99,
           "source": "x-kom.de",
           "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/204581794_-ryzen-5-9600x-boxed-amd.html",
-          "fetchedAt": "2026-05-15T18:31:24.801Z"
+          "fetchedAt": "2026-05-15T18:58:00.716Z"
         }
       ]
     },
     "0448d043-dbff-4b45-82b1-ab3327bdb0ba": {
       "name": "Thermalright Peerless Assassin 120 SE 66.17 CFM CPU Cooler",
-      "offers": []
+      "offers": [
+        {
+          "price": 34.29,
+          "source": "Amazon Marketplace",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/202870980_-peerless-assassin-120-se-thermalright.html",
+          "fetchedAt": "2026-05-15T18:58:00.894Z"
+        },
+        {
+          "price": 38.9,
+          "source": "proshop.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/202870980_-peerless-assassin-120-se-thermalright.html",
+          "fetchedAt": "2026-05-15T18:58:00.894Z"
+        },
+        {
+          "price": 47.13,
+          "source": "galaxus.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/202870980_-peerless-assassin-120-se-thermalright.html",
+          "fetchedAt": "2026-05-15T18:58:00.894Z"
+        },
+        {
+          "price": 48.4,
+          "source": "voelkner.de (Marktplatzhändler)",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/202870980_-peerless-assassin-120-se-thermalright.html",
+          "fetchedAt": "2026-05-15T18:58:00.894Z"
+        }
+      ]
     },
     "06193427-c0f1-40c8-b89b-fa9df1a11d53": {
       "name": "Gigabyte B850 AORUS ELITE WIFI7 ATX AM5 Motherboard",
-      "offers": []
+      "offers": [
+        {
+          "price": 169,
+          "source": "idealo.de",
+          "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/205567784_-b850-aorus-elite-wifi7-gigabyte.html",
+          "fetchedAt": "2026-05-15T18:58:01.178Z"
+        }
+      ]
     }
   }
 }

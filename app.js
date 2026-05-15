@@ -38,6 +38,7 @@ const sampleParts = [
 let parts = loadParts();
 let prices = {};
 let sharedParts = [];
+let priceUpdatedAt = null;
 
 const els = {
   form: document.querySelector("#part-form"),
@@ -120,6 +121,7 @@ async function loadPriceCache() {
     const payload = await response.json();
     prices = payload.parts || {};
     if (payload.updatedAt) {
+      priceUpdatedAt = payload.updatedAt;
       const updated = new Date(payload.updatedAt);
       els.lastUpdated.textContent = `Prices updated ${updated.toLocaleString("de-DE")}`;
     }
@@ -391,7 +393,9 @@ async function publishParts() {
   setPublishing(true, "Publishing parts to GitHub...");
   try {
     const remote = await githubRequest(`contents/${PARTS_FILE}?ref=${GITHUB_BRANCH}`, { token });
-    const body = JSON.stringify({ parts: parts.map(normalizePart) }, null, 2) + "\n";
+    const remotePayload = parseJsonFile(remote.content);
+    const mergedParts = mergeParts(Array.isArray(remotePayload.parts) ? remotePayload.parts : [], parts);
+    const body = JSON.stringify({ parts: mergedParts }, null, 2) + "\n";
     await githubRequest(`contents/${PARTS_FILE}`, {
       token,
       method: "PUT",
@@ -403,19 +407,86 @@ async function publishParts() {
       }
     });
 
+    parts = mergedParts;
+    saveParts(false);
+    render();
+
     setSyncMessage("Parts published. Starting price update...", "Syncing");
+    const previousPriceUpdate = latestPriceUpdate();
     await githubRequest(`actions/workflows/${PRICE_WORKFLOW}/dispatches`, {
       token,
       method: "POST",
       body: { ref: GITHUB_BRANCH },
       expectNoContent: true
     });
-    setSyncMessage("Published. Price update workflow started.", "Synced");
+    setSyncMessage("Price update running. Checking GitHub...", "Syncing");
+    await pollPriceCache(token, previousPriceUpdate);
   } catch (error) {
     setSyncMessage(error.message || "Publish failed.", "Error");
   } finally {
     setPublishing(false);
   }
+}
+
+function mergeParts(remoteParts, localParts) {
+  const merged = new Map();
+  remoteParts.map(normalizePart).forEach((part) => {
+    merged.set(partKey(part), part);
+  });
+  localParts.map(normalizePart).forEach((part) => {
+    const key = partKey(part);
+    const existing = merged.get(key);
+    merged.set(key, {
+      ...existing,
+      ...part,
+      id: existing?.id || part.id,
+      priorityUrl: part.priorityUrl || existing?.priorityUrl || "",
+      urls: [...new Set([...(existing?.urls || []), ...(part.urls || [])])]
+    });
+  });
+  return [...merged.values()];
+}
+
+function partKey(part) {
+  return normalizeKey(part.name || part.query || part.id);
+}
+
+function normalizeKey(value) {
+  return String(value).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function parseJsonFile(content) {
+  try {
+    return JSON.parse(fromBase64(content || ""));
+  } catch {
+    return {};
+  }
+}
+
+async function pollPriceCache(token, previousUpdatedAt) {
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    await wait(3000);
+    const remotePrices = await githubRequest(`contents/data/prices.json?ref=${GITHUB_BRANCH}`, { token });
+    const payload = parseJsonFile(remotePrices.content);
+    if (!payload.updatedAt || payload.updatedAt === previousUpdatedAt) continue;
+    priceUpdatedAt = payload.updatedAt;
+    prices = payload.parts || {};
+    const updated = new Date(payload.updatedAt);
+    els.lastUpdated.textContent = `Prices updated ${updated.toLocaleString("de-DE")}`;
+    render();
+    setSyncMessage("Published and prices refreshed from GitHub.", "Synced");
+    return;
+  }
+  setSyncMessage("Published. Price workflow is still finishing.", "Synced");
+}
+
+function latestPriceUpdate() {
+  return priceUpdatedAt;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function githubRequest(path, options) {
@@ -460,6 +531,12 @@ function toBase64(value) {
     binary += String.fromCharCode(byte);
   });
   return btoa(binary);
+}
+
+function fromBase64(value) {
+  const binary = atob(String(value).replace(/\s/g, ""));
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function isEbay(value) {

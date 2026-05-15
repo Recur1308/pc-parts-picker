@@ -45,7 +45,8 @@ function bestOffers(part, offers) {
   const currentOffers = dedupeOffers(offers).sort((a, b) => a.price - b.price).slice(0, 4);
   if (currentOffers.length) return currentOffers;
 
-  const existing = existingPrices.parts?.[part.id || part.name]?.offers || existingPrices.parts?.[part.name]?.offers || [];
+  const matchingExisting = Object.values(existingPrices.parts || {}).find((entry) => entry?.name === part.name);
+  const existing = existingPrices.parts?.[part.id || part.name]?.offers || existingPrices.parts?.[part.name]?.offers || matchingExisting?.offers || [];
   if (existing.length) {
     console.warn(`Keeping previous prices for ${part.name}; no current offers fetched.`);
   }
