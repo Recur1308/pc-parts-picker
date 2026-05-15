@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Munich PC Parts Picker</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Munich, Germany</p>
+        <h1>PC Parts Picker</h1>
+      </div>
+      <div class="header-actions">
+        <button id="import-data" class="icon-button" title="Import saved build" aria-label="Import saved build">
+          <span aria-hidden="true">↑</span>
+        </button>
+        <button id="export-data" class="icon-button" title="Export build" aria-label="Export build">
+          <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="picker-panel" aria-labelledby="editor-title">
+        <div class="panel-heading">
+          <h2 id="editor-title">Part</h2>
+          <span id="edit-mode" class="status-pill">New</span>
+        </div>
+
+        <form id="part-form" class="part-form">
+          <input type="hidden" id="part-id" />
+          <label>
+            Category
+            <select id="category" required>
+              <option>CPU</option>
+              <option>CPU Cooler</option>
+              <option>Motherboard</option>
+              <option>Memory</option>
+              <option>Storage</option>
+              <option>Video Card</option>
+              <option>Case</option>
+              <option>Power Supply</option>
+              <option>Monitor</option>
+              <option>Keyboard</option>
+              <option>Mouse</option>
+              <option>Other</option>
+            </select>
+          </label>
+
+          <label>
+            Product name
+            <input id="name" placeholder="AMD Ryzen 7 7800X3D" required />
+          </label>
+
+          <label>
+            Search terms
+            <input id="query" placeholder="7800X3D boxed AM5" />
+          </label>
+
+          <label>
+            Priority URL
+            <input id="priority-url" type="url" placeholder="https://www.idealo.de/..." />
+          </label>
+
+          <label>
+            Notes
+            <textarea id="notes" rows="4" placeholder="Shop preference, delivery, compatibility..."></textarea>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-button">Save Part</button>
+            <button type="button" id="reset-form" class="secondary-button">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="parts-area" aria-labelledby="parts-title">
+        <div class="toolbar">
+          <div>
+            <h2 id="parts-title">Build</h2>
+            <p id="last-updated">Prices not loaded yet</p>
+          </div>
+          <div class="toolbar-controls">
+            <input id="filter" type="search" placeholder="Filter parts" />
+            <button id="load-sample" class="secondary-button">Sample</button>
+          </div>
+        </div>
+
+        <div class="summary-strip">
+          <div>
+            <span>Total</span>
+            <strong id="total-price">€0.00</strong>
+          </div>
+          <div>
+            <span>Known Prices</span>
+            <strong id="known-count">0/0</strong>
+          </div>
+          <div>
+            <span>Best Source</span>
+            <strong id="best-source">-</strong>
+          </div>
+        </div>
+
+        <div id="parts-list" class="parts-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <input id="file-input" type="file" accept="application/json" hidden />
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+name: Update prices
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Refresh price cache
+        run: node scripts/update-prices.mjs
+      - name: Commit price cache
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update cached prices"
+          file_pattern: data/prices.json

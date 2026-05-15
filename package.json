@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "start": "python -m http.server 8000 -b 127.0.0.1",
+    "update-prices": "node scripts/update-prices.mjs"
+  }
+}
